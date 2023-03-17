@@ -56,19 +56,20 @@ struct _helper_aggregate {
 };
 
 template <typename To, typename From>
-concept no_narrowing = requires(From && t) {
-  // The validity of this expression must be equivalent to that of `To x[] = {std::forward<From>(t)}`
-  // 1) list-initialization avoids narrowing conversions
-  // 2) an aggregate type wrapper allows us to use braces (otherwise `To{...}` could mean a call to
-  // constructor taking initializer_list)
-  _helper_aggregate<To>{std::forward<From>(t)};
-};
+concept no_narrowing = requires(From&& t) {
+                         // The validity of this expression must be equivalent to that of `To x[] =
+                         // {std::forward<From>(t)}` 1) list-initialization avoids narrowing conversions 2) an aggregate
+                         // type wrapper allows us to use braces (otherwise `To{...}` could mean a call to constructor
+                         // taking initializer_list)
+                         _helper_aggregate<To>{std::forward<From>(t)};
+                       };
 
 template <typename To>
 struct _conversion_resolver<To> {
 
   template <typename From>
-  requires no_narrowing<To, From> constexpr static To f(To);
+    requires no_narrowing<To, From>
+  constexpr static To f(To);
 };
 
 template <typename From, typename... To>
@@ -76,11 +77,11 @@ using resolve_conversion_t =
     decltype(_conversion_resolver<To...>::template f<From>(std::forward<From>(std::declval<From>())));
 
 template <typename T, typename... Alternatives>
-concept resolvable_conversion = requires(T && t) {
-  requires meta::distinct<Alternatives...>;
-  requires(std::is_convertible_v<std::remove_cvref_t<T>, Alternatives> || ...);
-  typename detail::resolve_conversion_t<T, Alternatives...>;
-};
+concept resolvable_conversion = requires(T&& t) {
+                                  requires meta::distinct<Alternatives...>;
+                                  requires(std::is_convertible_v<std::remove_cvref_t<T>, Alternatives> || ...);
+                                  typename detail::resolve_conversion_t<T, Alternatives...>;
+                                };
 
 /*******************************************************************************
  *                      Recursion helper for all methods                       *
@@ -106,7 +107,9 @@ struct recursion_helper {
   }
 
   constexpr static void copy_construct(size_t index, variant_storage<T_i, Rest...> const& src,
-                                       variant_storage<T_i, Rest...>& dst) requires(copy_ctor<T_i, Rest...>) {
+                                       variant_storage<T_i, Rest...>& dst)
+    requires(copy_ctor<T_i, Rest...>)
+  {
     if (index == 0) {
       std::construct_at(std::addressof(dst.first), src.first);
     } else {
@@ -117,7 +120,9 @@ struct recursion_helper {
   }
 
   constexpr static void move_construct(size_t index, variant_storage<T_i, Rest...>&& src,
-                                       variant_storage<T_i, Rest...>& dst) requires(move_ctor<T_i, Rest...>) {
+                                       variant_storage<T_i, Rest...>& dst)
+    requires(move_ctor<T_i, Rest...>)
+  {
     if (index == 0) {
       std::construct_at(std::addressof(dst.first), std::move(src.first));
     } else {
@@ -149,7 +154,9 @@ struct recursion_helper {
   }
 
   constexpr static void copy_assign(size_t index, variant_storage<T_i, Rest...> const& src,
-                                    variant_storage<T_i, Rest...>& dst) requires(copy_assign<T_i, Rest...>) {
+                                    variant_storage<T_i, Rest...>& dst)
+    requires(copy_assign<T_i, Rest...>)
+  {
     if (index == 0) {
       dst.first = src.first;
     } else {
@@ -160,7 +167,9 @@ struct recursion_helper {
   }
 
   constexpr static void move_assign(size_t index, variant_storage<T_i, Rest...>&& src,
-                                    variant_storage<T_i, Rest...>& dst) requires(move_assign<T_i, Rest...>) {
+                                    variant_storage<T_i, Rest...>& dst)
+    requires(move_assign<T_i, Rest...>)
+  {
     if (index == 0) {
       dst.first = std::move(src.first);
     } else {
@@ -171,8 +180,8 @@ struct recursion_helper {
   }
 
   template <typename T, typename... Args>
-  requires meta::once<T, T_i, Rest...>&& std::is_constructible_v<T, Args...> constexpr static void
-  inplace_type_construct(variant_storage<T_i, Rest...>& dst, Args&&... args) {
+    requires meta::once<T, T_i, Rest...> && std::is_constructible_v<T, Args...>
+  constexpr static void inplace_type_construct(variant_storage<T_i, Rest...>& dst, Args&&... args) {
     inplace_index_construct<meta::idx_v<T, T_i, Rest...>>(dst, std::forward<Args>(args)...);
   }
 
@@ -185,7 +194,9 @@ struct recursion_helper {
     }
   }
 
-  constexpr static void destroy(size_t index, variant_storage<T_i, Rest...>& dst) requires(dtor<T_i, Rest...>) {
+  constexpr static void destroy(size_t index, variant_storage<T_i, Rest...>& dst)
+    requires(dtor<T_i, Rest...>)
+  {
     if (index == 0) {
       dst.first.~T_i();
     } else {
