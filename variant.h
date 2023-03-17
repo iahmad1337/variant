@@ -32,7 +32,7 @@ public:
     }
   }
 
-  constexpr variant(variant&& other) = default;
+  constexpr variant(variant&& other) requires(detail::trivial_move_ctor<Alternatives...>) = default;
   constexpr variant(variant&& other) noexcept((std::is_nothrow_move_constructible_v<Alternatives> && ...))
       requires(!detail::trivial_move_ctor<Alternatives...> && detail::move_ctor<Alternatives...>) {
     if (!other.valueless_by_exception()) {
@@ -357,7 +357,7 @@ constexpr auto operator<=>(const variant<Alternatives...>& lhs, const variant<Al
               }
             }
           }
-          return lhs.index() <= > rhs.index();
+          return lhs.index() <=> rhs.index();
         },
         lhs, rhs);
   }
@@ -365,29 +365,29 @@ constexpr auto operator<=>(const variant<Alternatives...>& lhs, const variant<Al
 
 template <typename... Alternatives>
 constexpr bool operator<(const variant<Alternatives...>& lhs, const variant<Alternatives...>& rhs) {
-  return (lhs <= > rhs) == std::strong_ordering::less;
+  return (lhs <=> rhs) == std::strong_ordering::less;
 }
 
 template <typename... Alternatives>
 constexpr bool operator>(const variant<Alternatives...>& lhs, const variant<Alternatives...>& rhs) {
-  return (lhs <= > rhs) == std::strong_ordering::greater;
+  return (lhs <=> rhs) == std::strong_ordering::greater;
 }
 
 template <typename... Alternatives>
 constexpr bool operator<=(const variant<Alternatives...>& lhs, const variant<Alternatives...>& rhs) {
-  auto res = (lhs <= > rhs);
+  auto res = (lhs <=> rhs);
   return res == std::strong_ordering::less || res == std::strong_ordering::equal;
 }
 
 template <typename... Alternatives>
 constexpr bool operator>=(const variant<Alternatives...>& lhs, const variant<Alternatives...>& rhs) {
-  auto res = (lhs <= > rhs);
+  auto res = (lhs <=> rhs);
   return res == std::strong_ordering::greater || res == std::strong_ordering::equal;
 }
 
 template <typename... Alternatives>
 constexpr bool operator==(const variant<Alternatives...>& lhs, const variant<Alternatives...>& rhs) {
-  return (lhs <= > rhs) == std::strong_ordering::equal;
+  return (lhs <=> rhs) == std::strong_ordering::equal;
 }
 
 template <typename... Alternatives>
