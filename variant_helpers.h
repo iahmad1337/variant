@@ -68,7 +68,8 @@ template <typename To>
 struct _conversion_resolver<To> {
 
   template <typename From>
-  requires no_narrowing<To, From> constexpr static To f(To);
+  requires no_narrowing<To, From>
+  constexpr static To f(To);
 };
 
 template <typename From, typename... To>
@@ -171,8 +172,8 @@ struct recursion_helper {
   }
 
   template <typename T, typename... Args>
-  requires meta::once<T, T_i, Rest...>&& std::is_constructible_v<T, Args...>
-      constexpr static void inplace_type_construct(variant_storage<T_i, Rest...>& dst, Args&&... args) {
+  requires meta::once<T, T_i, Rest...> && std::is_constructible_v<T, Args...>
+  constexpr static void inplace_type_construct(variant_storage<T_i, Rest...>& dst, Args&&... args) {
     inplace_index_construct<meta::idx_v<T, T_i, Rest...>>(dst, std::forward<Args>(args)...);
   }
 

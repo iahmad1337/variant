@@ -76,23 +76,23 @@ inline constexpr bool default_ctor = (std::is_default_constructible_v<Ts> && ...
 template <typename... Ts>
 inline constexpr bool copy_ctor = (std::is_copy_constructible_v<Ts> && ...);
 template <typename... Ts>
-inline constexpr bool trivial_copy_ctor = (std::is_trivially_copy_constructible_v<Ts> && ...);
+inline constexpr bool trivial_copy_ctor = (std::is_trivially_copy_constructible_v<Ts> && ...) && copy_ctor<Ts...>;
 template <typename... Ts>
 inline constexpr bool copy_assign = (std::is_copy_assignable_v<Ts> && ...);
 template <typename... Ts>
-inline constexpr bool trivial_copy_assign = (std::is_trivially_copy_assignable_v<Ts> && ...);
+inline constexpr bool trivial_copy_assign = (std::is_trivially_copy_assignable_v<Ts> && ...) && copy_assign<Ts...>;
 template <typename... Ts>
 inline constexpr bool move_ctor = (std::is_move_constructible_v<Ts> && ...);
 template <typename... Ts>
-inline constexpr bool trivial_move_ctor = (std::is_trivially_move_constructible_v<Ts> && ...);
+inline constexpr bool trivial_move_ctor = (std::is_trivially_move_constructible_v<Ts> && ...) && move_ctor<Ts...>;
 template <typename... Ts>
 inline constexpr bool move_assign = (std::is_move_assignable_v<Ts> && ...);
 template <typename... Ts>
-inline constexpr bool trivial_move_assign = (std::is_trivially_move_assignable_v<Ts> && ...);
+inline constexpr bool trivial_move_assign = (std::is_trivially_move_assignable_v<Ts> && ...) && move_assign<Ts...>;
 template <typename... Ts>
 inline constexpr bool dtor = (std::destructible<Ts> && ...);
 template <typename... Ts>
-inline constexpr bool trivial_dtor = (std::is_trivially_destructible_v<Ts> && ...);
+inline constexpr bool trivial_dtor = (std::is_trivially_destructible_v<Ts> && ...) && dtor<Ts...>;
 
 /*******************************************************************************
  *                             `visit` helpers                                 *
