@@ -44,11 +44,6 @@ union _variant_storage<trivial_destructor> {
  *                     Helper for conversion operations                        *
  *******************************************************************************/
 
-template <typename... Types>
-struct _conversion_resolver : _conversion_resolver<Types>... {
-  using _conversion_resolver<Types>::f...;
-};
-
 // used for aggregate-initialization (see below)
 template <typename To>
 struct _helper_aggregate {
@@ -64,17 +59,19 @@ concept no_narrowing = requires(From&& t) {
                          _helper_aggregate<To>{std::forward<From>(t)};
                        };
 
-template <typename To>
-struct _conversion_resolver<To> {
+template <typename From, typename... Types>
+struct _conversion_resolver : _conversion_resolver<From, Types>... {
+  using _conversion_resolver<From, Types>::f...;
+};
 
-  template <typename From>
-    requires no_narrowing<To, From>
-  constexpr static To f(To);
+template <typename From, typename To>
+struct _conversion_resolver<From, To> {
+  constexpr static To f(To)
+    requires no_narrowing<To, From>;
 };
 
 template <typename From, typename... To>
-using resolve_conversion_t =
-    decltype(_conversion_resolver<To...>::template f<From>(std::forward<From>(std::declval<From>())));
+using resolve_conversion_t = decltype(_conversion_resolver<From, To...>::f(std::declval<From>()));
 
 template <typename T, typename... Alternatives>
 concept resolvable_conversion = requires(T&& t) {

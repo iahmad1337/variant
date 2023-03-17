@@ -24,7 +24,7 @@ public:
       : variant{in_place_index<0>} {}
 
   constexpr variant(variant const& other)
-    requires(detail::trivial_copy_ctor<Alternatives...>)
+    requires detail::trivial_copy_ctor<Alternatives...>
   = default;
 
   constexpr variant(variant const& other) noexcept((std::is_nothrow_copy_constructible_v<Alternatives> && ...))
