@@ -3,6 +3,7 @@
  *******************************************************************************/
 
 #pragma once
+#include <array>
 #include <cstddef>
 #include <type_traits>
 
@@ -41,16 +42,27 @@ template <typename... Types>
 inline constexpr bool distinct = (once<Types, Types...> && ...);
 
 // get the trait of a particular type in parameter pack at runtime
-template <template <typename T> typename Trait, typename First, typename... Rest>
+template <template <typename T> typename Trait, typename... Ts>
 inline bool runtime_trait(size_t index) {
-  if (index == 0) {
-    return Trait<First>::value;
-  } else {
-    if constexpr (sizeof...(Rest) > 0) {
-      return runtime_trait<Trait, Rest...>(index - 1);
-    } else {
-      return false;
-    }
-  }
+  static_assert(sizeof...(Ts) > 0);
+  constexpr std::array<bool, sizeof...(Ts)> satisfies{Trait<Ts>::value...};
+  return satisfies[index];
 }
+
+/// This is a variable to be used with `static_assert` to overcome its
+/// limitations with `constexpr if` and other cases where we want to write
+/// `statis_assert(false, ...)`. E.g.:
+/// ```
+/// template<typename ...Ts>
+/// int dont_allow_empty_pack() {
+///   if constexpr (sizeof...(Ts) > 0) {
+///     return sizeof...(Ts) + 42;
+///   } else {
+///     static_assert(false, "bad template params");  // fail
+///     static_assert(temp_false<Ts...>, "bad template params");  // ok
+///   }
+/// }
+template <typename...>
+inline constexpr bool temp_false = false;
+
 } // namespace meta
