@@ -121,9 +121,8 @@ constexpr inline auto make_jump_table(std::index_sequence<Indices...>, std::inde
 }
 
 template <typename Visitor, typename... Variants>
-constexpr inline auto
-    jump_table = make_jump_table<Visitor, Variants...>(std::index_sequence<>{},
-                                                       std::make_index_sequence<variant_size_v<Variants>>{}...);
+constexpr inline auto jump_table = make_jump_table<Visitor, Variants...>(
+    std::index_sequence<>{}, std::make_index_sequence<variant_size_v<Variants>>{}...);
 
 template <typename Array>
 constexpr inline auto multi_at(const Array& array, size_t first) {

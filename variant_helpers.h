@@ -56,7 +56,7 @@ struct _helper_aggregate {
 };
 
 template <typename To, typename From>
-concept no_narrowing = requires(From&& t) {
+concept no_narrowing = requires(From && t) {
   // The validity of this expression must be equivalent to that of `To x[] = {std::forward<From>(t)}`
   // 1) list-initialization avoids narrowing conversions
   // 2) an aggregate type wrapper allows us to use braces (otherwise `To{...}` could mean a call to
@@ -68,8 +68,7 @@ template <typename To>
 struct _conversion_resolver<To> {
 
   template <typename From>
-  requires no_narrowing<To, From>
-  constexpr static To f(To);
+  requires no_narrowing<To, From> constexpr static To f(To);
 };
 
 template <typename From, typename... To>
@@ -77,7 +76,7 @@ using resolve_conversion_t =
     decltype(_conversion_resolver<To...>::template f<From>(std::forward<From>(std::declval<From>())));
 
 template <typename T, typename... Alternatives>
-concept resolvable_conversion = requires(T&& t) {
+concept resolvable_conversion = requires(T && t) {
   requires meta::distinct<Alternatives...>;
   requires(std::is_convertible_v<std::remove_cvref_t<T>, Alternatives> || ...);
   typename detail::resolve_conversion_t<T, Alternatives...>;
@@ -172,8 +171,8 @@ struct recursion_helper {
   }
 
   template <typename T, typename... Args>
-  requires meta::once<T, T_i, Rest...> && std::is_constructible_v<T, Args...>
-  constexpr static void inplace_type_construct(variant_storage<T_i, Rest...>& dst, Args&&... args) {
+  requires meta::once<T, T_i, Rest...>&& std::is_constructible_v<T, Args...> constexpr static void
+  inplace_type_construct(variant_storage<T_i, Rest...>& dst, Args&&... args) {
     inplace_index_construct<meta::idx_v<T, T_i, Rest...>>(dst, std::forward<Args>(args)...);
   }
 

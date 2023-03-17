@@ -24,9 +24,8 @@ public:
 
   constexpr variant(variant const& other) requires(detail::trivial_copy_ctor<Alternatives...>) = default;
 
-  constexpr variant(variant const& other) noexcept((std::is_nothrow_copy_constructible_v<Alternatives> &&
-                                                    ...)) requires(!detail::trivial_copy_ctor<Alternatives...> &&
-                                                                   detail::copy_ctor<Alternatives...>) {
+  constexpr variant(variant const& other) noexcept((std::is_nothrow_copy_constructible_v<Alternatives> && ...))
+      requires(!detail::trivial_copy_ctor<Alternatives...> && detail::copy_ctor<Alternatives...>) {
     if (!other.valueless_by_exception()) {
       recur::copy_construct(other.current_alternative, other.alternatives, this->alternatives);
       this->current_alternative = other.current_alternative;
@@ -34,9 +33,8 @@ public:
   }
 
   constexpr variant(variant&& other) requires(detail::trivial_move_ctor<Alternatives...>) = default;
-  constexpr variant(variant&& other) noexcept((std::is_nothrow_move_constructible_v<Alternatives> &&
-                                               ...)) requires(!detail::trivial_move_ctor<Alternatives...> &&
-                                                              detail::move_ctor<Alternatives...>) {
+  constexpr variant(variant&& other) noexcept((std::is_nothrow_move_constructible_v<Alternatives> && ...))
+      requires(!detail::trivial_move_ctor<Alternatives...> && detail::move_ctor<Alternatives...>) {
     if (!other.valueless_by_exception()) {
       recur::move_construct(other.current_alternative, std::move(other.alternatives), this->alternatives);
       this->current_alternative = other.current_alternative;
@@ -56,14 +54,14 @@ public:
   }
 
   template <class T, class... Args>
-  requires meta::once<T, Alternatives...> && std::is_constructible_v<T, Args...>
-  constexpr explicit variant(in_place_type_t<T>, Args&&... args) {
+  requires meta::once<T, Alternatives...>&&
+      std::is_constructible_v<T, Args...> constexpr explicit variant(in_place_type_t<T>, Args&&... args) {
     recur::template inplace_type_construct<T>(this->alternatives, std::forward<Args>(args)...);
     this->current_alternative = meta::idx_v<T, Alternatives...>;
   }
 
   template <size_t I, class... Args>
-  requires(I < sizeof...(Alternatives)) &&
+      requires(I < sizeof...(Alternatives)) &&
       std::is_constructible_v<meta::ith_t<I, Alternatives...>, Args...> constexpr explicit variant(in_place_index_t<I>,
                                                                                                    Args&&... args) {
     recur::template inplace_index_construct<I>(this->alternatives, std::forward<Args>(args)...);
@@ -75,12 +73,11 @@ public:
    *******************************************************************************/
 
   // Copy assign
-  constexpr variant& operator=(const variant& rhs) requires detail::trivial_copy_ctor<Alternatives...> &&
-      detail::trivial_copy_assign<Alternatives...> && detail::trivial_dtor<Alternatives...>
-  = default;
+  constexpr variant& operator=(const variant& rhs) requires detail::trivial_copy_ctor<
+      Alternatives...>&& detail::trivial_copy_assign<Alternatives...>&& detail::trivial_dtor<Alternatives...> = default;
 
-  constexpr variant&
-  operator=(const variant& rhs) requires detail::copy_ctor<Alternatives...> && detail::copy_assign<Alternatives...> &&
+  constexpr variant& operator=(
+      const variant& rhs) requires detail::copy_ctor<Alternatives...>&& detail::copy_assign<Alternatives...> &&
       (!(detail::trivial_copy_ctor<Alternatives...> && detail::trivial_copy_assign<Alternatives...> &&
          detail::trivial_dtor<Alternatives...>)) {
     if (this == &rhs) {
@@ -108,14 +105,12 @@ public:
   }
 
   // Move assign
-  constexpr variant& operator=(variant&& rhs) requires detail::trivial_move_ctor<Alternatives...> &&
-      detail::trivial_move_assign<Alternatives...> && detail::trivial_dtor<Alternatives...>
-  = default;
+  constexpr variant& operator=(variant&& rhs) requires detail::trivial_move_ctor<
+      Alternatives...>&& detail::trivial_move_assign<Alternatives...>&& detail::trivial_dtor<Alternatives...> = default;
 
-  constexpr variant&
-  operator=(variant&& rhs) noexcept(((std::is_nothrow_move_constructible_v<Alternatives> &&
-                                      std::is_nothrow_move_assignable_v<Alternatives>)&&...)) requires
-      detail::move_ctor<Alternatives...> && detail::move_assign<Alternatives...> &&
+  constexpr variant& operator=(variant&& rhs) noexcept(((std::is_nothrow_move_constructible_v<Alternatives> &&
+                                                         std::is_nothrow_move_assignable_v<Alternatives>)&&...))
+          requires detail::move_ctor<Alternatives...>&& detail::move_assign<Alternatives...> &&
       (!(detail::trivial_move_ctor<Alternatives...> && detail::trivial_move_assign<Alternatives...> &&
          detail::trivial_dtor<Alternatives...>)) {
     if (this == &rhs) {
@@ -139,10 +134,10 @@ public:
 
   // Conversion assign
   template <typename T>
-  requires detail::resolvable_conversion<T, Alternatives...> &&(
-      std::is_assignable_v<Alternatives&, std::remove_cvref_t<T>> || ...) constexpr variant&
-  operator=(T&& t) noexcept((std::is_nothrow_assignable_v<detail::resolve_conversion_t<T, Alternatives...>&, T> &&
-                             std::is_nothrow_constructible_v<detail::resolve_conversion_t<T, Alternatives...>, T>)) {
+      requires detail::resolvable_conversion<T, Alternatives...> &&
+      (std::is_assignable_v<Alternatives&, std::remove_cvref_t<T>> || ...) constexpr variant& operator=(T&& t) noexcept(
+          (std::is_nothrow_assignable_v<detail::resolve_conversion_t<T, Alternatives...>&, T> &&
+           std::is_nothrow_constructible_v<detail::resolve_conversion_t<T, Alternatives...>, T>)) {
     using T_j = detail::resolve_conversion_t<T, Alternatives...>;
     if (holds_alternative<T_j>(*this)) {
       recur::convert_assign(std::forward<T>(t), this->alternatives, this->current_alternative, sizeof...(Alternatives));
@@ -158,14 +153,14 @@ public:
   }
 
   template <class T, class... Args>
-  requires meta::once<T, Alternatives...> && std::is_constructible_v<T, Args...>
-  constexpr T& emplace(Args&&... args) {
+  requires meta::once<T, Alternatives...>&& std::is_constructible_v<T, Args...> constexpr T& emplace(Args&&... args) {
     return emplace<meta::idx_v<T, Alternatives...>>(std::forward<Args>(args)...);
   }
 
   template <size_t I, class... Args>
-  requires std::is_constructible_v<meta::ith_t<I, Alternatives...>, Args...>
-  constexpr variant_alternative_t<I, variant>& emplace(Args&&... args) {
+  requires
+      std::is_constructible_v<meta::ith_t<I, Alternatives...>, Args...> constexpr variant_alternative_t<I, variant>&
+      emplace(Args&&... args) {
     if (!valueless_by_exception()) {
       reset();
       recur::template inplace_index_construct<I>(this->alternatives, std::forward<Args>(args)...);
@@ -193,10 +188,9 @@ public:
    *                                   Swap                                      *
    *******************************************************************************/
 
-  constexpr void swap(variant& rhs) noexcept(
-      ((std::is_nothrow_move_constructible_v<Alternatives> &&
-        std::is_nothrow_swappable_v<Alternatives>)&&...)) requires((std::is_swappable_v<Alternatives> && ...) &&
-                                                                   detail::move_ctor<Alternatives...>) {
+  constexpr void swap(variant& rhs) noexcept(((std::is_nothrow_move_constructible_v<Alternatives> &&
+                                               std::is_nothrow_swappable_v<Alternatives>)&&...))
+      requires((std::is_swappable_v<Alternatives> && ...) && detail::move_ctor<Alternatives...>) {
     if (valueless_by_exception() && rhs.valueless_by_exception()) {
       return;
     } else if (index() == rhs.index()) {
@@ -252,14 +246,14 @@ public:
   }
 
   template <class T>
-  requires meta::once<T, Alternatives...>
-  friend constexpr std::add_pointer_t<T> get_if(variant<Alternatives...>* pv) noexcept {
+  requires meta::once<T, Alternatives...> friend constexpr std::add_pointer_t<T>
+  get_if(variant<Alternatives...>* pv) noexcept {
     return get_if<meta::idx_v<T, Alternatives...>>(pv);
   }
 
   template <class T>
-  requires meta::once<T, Alternatives...>
-  friend constexpr std::add_pointer_t<const T> get_if(variant<Alternatives...> const* pv) noexcept {
+  requires meta::once<T, Alternatives...> friend constexpr std::add_pointer_t<const T>
+  get_if(variant<Alternatives...> const* pv) noexcept {
     return get_if<meta::idx_v<T, Alternatives...>>(pv);
   }
 };
@@ -299,26 +293,22 @@ constexpr variant_alternative_t<I, variant<Alternatives...>> const&& get(variant
 }
 
 template <typename T, typename... Alternatives>
-requires meta::once<T, Alternatives...>
-constexpr T& get(variant<Alternatives...>& v) {
+requires meta::once<T, Alternatives...> constexpr T& get(variant<Alternatives...>& v) {
   return get<meta::idx_v<T, Alternatives...>>(v);
 }
 
 template <typename T, typename... Alternatives>
-requires meta::once<T, Alternatives...>
-constexpr T&& get(variant<Alternatives...>&& v) {
+requires meta::once<T, Alternatives...> constexpr T&& get(variant<Alternatives...>&& v) {
   return std::move(get<meta::idx_v<T, Alternatives...>>(v));
 }
 
 template <typename T, typename... Alternatives>
-requires meta::once<T, Alternatives...>
-constexpr T const& get(variant<Alternatives...> const& v) {
+requires meta::once<T, Alternatives...> constexpr T const& get(variant<Alternatives...> const& v) {
   return get<meta::idx_v<T, Alternatives...>>(v);
 }
 
 template <typename T, typename... Alternatives>
-requires meta::once<T, Alternatives...>
-constexpr T const&& get(variant<Alternatives...> const&& v) {
+requires meta::once<T, Alternatives...> constexpr T const&& get(variant<Alternatives...> const&& v) {
   return std::move(get<meta::idx_v<T, Alternatives...>>(v));
 }
 
